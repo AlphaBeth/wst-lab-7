@@ -102,7 +102,7 @@ public class ConsoleClient {
 
         Command<Void> listBusinesses = new Command<>("listBusinesses", "List all businesses registered on JUDDI");
 
-        Command<Box<String>> filterServices = new Command<>("filterBusinesses", "Filter all services list in JUDDI",
+        Command<Box<String>> filterServices = new Command<>("filterServices", "Filter all services list in JUDDI",
                 asList(
                         new StringArg<>("filter query", "String to filter services", Box::setValue)
                 ), Box::new);
