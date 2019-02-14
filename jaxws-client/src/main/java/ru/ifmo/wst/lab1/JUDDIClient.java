@@ -24,7 +24,6 @@ import org.uddi.api_v3.SaveBusiness;
 import org.uddi.api_v3.SaveService;
 import org.uddi.api_v3.ServiceDetail;
 import org.uddi.api_v3.ServiceInfo;
-import org.uddi.api_v3.ServiceInfos;
 import org.uddi.v3_service.UDDIInquiryPortType;
 import org.uddi.v3_service.UDDIPublicationPortType;
 import org.uddi.v3_service.UDDISecurityPortType;
@@ -69,16 +68,12 @@ public class JUDDIClient {
      * mechanism that should be portable (meaning use any UDDI v3 library
      * with this code)
      */
-    public void publishUrl(String serviceName, String wsdlUrl) throws RemoteException {
-        BusinessDetail bd = createBusiness();
-
-        String myBusKey = bd.getBusinessEntity().get(0).getBusinessKey();
-        System.out.println("myBusiness key:  " + myBusKey);
+    public ServiceDetail publishUrl(String businessKey, String serviceName, String wsdlUrl) throws RemoteException {
 
         // Creating a service to save.  Only adding the minimum data: the parent business key retrieved from saving the business
         // above and a single name.
         BusinessService myService = new BusinessService();
-        myService.setBusinessKey(myBusKey);
+        myService.setBusinessKey(businessKey);
         Name myServName = new Name();
         myServName.setValue(serviceName);
         myService.getName().add(myServName);
@@ -101,8 +96,7 @@ public class JUDDIClient {
         ss.getBusinessService().add(myService);
         ss.setAuthInfo(authToken.getAuthInfo());
         ServiceDetail sd = publish.saveService(ss);
-        String myServKey = sd.getBusinessService().get(0).getServiceKey();
-        System.out.println("myService key:  " + myServKey);
+        return sd;
 
     }
 

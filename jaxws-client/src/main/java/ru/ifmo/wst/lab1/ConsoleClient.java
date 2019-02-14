@@ -2,6 +2,7 @@ package ru.ifmo.wst.lab1;
 
 import lombok.SneakyThrows;
 import org.uddi.api_v3.BusinessService;
+import org.uddi.api_v3.ServiceDetail;
 import ru.ifmo.wst.lab1.command.Command;
 import ru.ifmo.wst.lab1.command.CommandArg;
 import ru.ifmo.wst.lab1.command.CommandInterpreter;
@@ -107,11 +108,18 @@ public class ConsoleClient {
                         new StringArg<>("filter query", "String to filter services", Box::setValue)
                 ), Box::new);
 
+        Command<ServiceCreate> createServiceCommand = new Command<>("createService", "Publish new service by wsdl url",
+                asList(
+                        new StringArg<>("business key", "Business key in JUDDI register (use listBusinesses)", ServiceCreate::setBusinessKey),
+                        new StringArg<>("service name", "Name of new service", ServiceCreate::setServiceName),
+                        new StringArg<>("service wsdl", "WSDL URL of service", ServiceCreate::setWsdlUrl)
+                ), ServiceCreate::new);
+
         CommandInterpreter commandInterpreter = new CommandInterpreter(() -> readLine(bufferedReader),
                 System.out::print,
                 asList(
-                        infoCommand, changeEndpointAddressCommand, listBusinesses, filterServices, createCommand,
-                        findAllCommand, filterCommand,
+                        infoCommand, changeEndpointAddressCommand, listBusinesses, filterServices, createServiceCommand,
+                        createCommand, findAllCommand, filterCommand,
                         updateCommand, deleteCommand, exitCommand
                 ),
                 "No command found",
@@ -171,7 +179,11 @@ public class ConsoleClient {
                     @SuppressWarnings("unchecked")
                     Box<String> filterArg = (Box<String>) withArg.getRight();
                     List<BusinessService> services = juddiClient.getServices(filterArg.getValue());
-                    JUDDIUtil.printServiceInfo(services);
+                    JUDDIUtil.printServicesInfo(services);
+                } else if (command.equals(createServiceCommand)) {
+                    ServiceCreate sc = (ServiceCreate) withArg.getRight();
+                    ServiceDetail serviceDetail = juddiClient.publishUrl(sc.getBusinessKey(), sc.getServiceName(), sc.getWsdlUrl());
+                    JUDDIUtil.printServiceInfo(serviceDetail.getBusinessService().get(0));
                 }
             } catch (ExterminatusServiceException exc) {
                 System.out.println("Error in service:");

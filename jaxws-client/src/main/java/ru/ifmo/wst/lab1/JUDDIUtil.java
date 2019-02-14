@@ -35,17 +35,21 @@ public class JUDDIUtil {
         }
     }
 
-    public static void printServiceInfo(List<BusinessService> businessServices) {
+    public static void printServicesInfo(List<BusinessService> businessServices) {
         for (BusinessService businessService : businessServices) {
             System.out.println("-------------------------------------------");
-            System.out.println("Service Key: " + businessService.getServiceKey());
-            System.out.println("Owning Business Key: " + businessService.getBusinessKey());
-            System.out.println("Name: " + businessService.getName().stream()
-                    .map(JUDDIUtil::nameToString)
-                    .collect(Collectors.joining("\n"))
-            );
-            printBindingTemplates(businessService.getBindingTemplates());
+            printServiceInfo(businessService);
         }
+    }
+
+    public static void printServiceInfo(BusinessService businessService) {
+        System.out.println("Service Key: " + businessService.getServiceKey());
+        System.out.println("Owning Business Key: " + businessService.getBusinessKey());
+        System.out.println("Name: " + businessService.getName().stream()
+                .map(JUDDIUtil::nameToString)
+                .collect(Collectors.joining("\n"))
+        );
+        printBindingTemplates(businessService.getBindingTemplates());
     }
 
     /**
