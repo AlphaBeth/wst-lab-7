@@ -49,6 +49,16 @@
             <classifier>client</classifier>
             <version>7.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.juddi</groupId>
+            <artifactId>uddi-ws</artifactId>
+            <version>3.3.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.juddi</groupId>
+            <artifactId>juddi-client</artifactId>
+            <version>3.3.6</version>
+        </dependency>
     </dependencies>
 
 </project>

@@ -1,6 +1,7 @@
 package ru.ifmo.wst.lab1;
 
 import lombok.SneakyThrows;
+import org.uddi.api_v3.BusinessService;
 import ru.ifmo.wst.lab1.command.Command;
 import ru.ifmo.wst.lab1.command.CommandArg;
 import ru.ifmo.wst.lab1.command.CommandInterpreter;
@@ -36,7 +37,7 @@ public class ConsoleClient {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
         BindingProvider bindingProvider = (BindingProvider) service;
         String endpointUrl;
-        endpointUrl = "http://localhost:8080/deployment-jaxws-1.0/ExterminatusServiceService";
+        endpointUrl = "http://localhost:8080/EXTERMINATE";
         System.out.print("Enter endpoint url (or empty string for default " + endpointUrl + ")\n> ");
         String line = bufferedReader.readLine();
         if (line == null) {
@@ -45,7 +46,13 @@ public class ConsoleClient {
         if (!line.trim().isEmpty()) {
             endpointUrl = line.trim();
         }
+        System.out.println("Enter JUDDI username");
+        String username = bufferedReader.readLine().trim();
+        System.out.println("Enter JUDDI user password");
+        String password = bufferedReader.readLine().trim();
         bindingProvider.getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, endpointUrl);
+        JUDDIClient juddiClient = new JUDDIClient("META-INF/uddi.xml");
+        juddiClient.authenticate(username, password);
 
 
         Command<Void> infoCommand = new Command<>("info", "Print help for commands");
@@ -93,10 +100,18 @@ public class ConsoleClient {
                         new LongArg<>("id", "Exterminatus id", Box::setValue)
                 ), Box::new);
 
+        Command<Void> listBusinesses = new Command<>("listBusinesses", "List all businesses registered on JUDDI");
+
+        Command<Box<String>> filterServices = new Command<>("filterBusinesses", "Filter all services list in JUDDI",
+                asList(
+                        new StringArg<>("filter query", "String to filter services", Box::setValue)
+                ), Box::new);
+
         CommandInterpreter commandInterpreter = new CommandInterpreter(() -> readLine(bufferedReader),
                 System.out::print,
                 asList(
-                        infoCommand, changeEndpointAddressCommand, createCommand, findAllCommand, filterCommand,
+                        infoCommand, changeEndpointAddressCommand, listBusinesses, filterServices, createCommand,
+                        findAllCommand, filterCommand,
                         updateCommand, deleteCommand, exitCommand
                 ),
                 "No command found",
@@ -150,6 +165,13 @@ public class ConsoleClient {
                     int updateCount = service.update(updateArg.getId(), updateArg.getInitiator(), updateArg.getReason(), updateArg.getMethod(),
                             updateArg.getPlanet(), updateArg.getDate());
                     System.out.printf("%d rows were updated by id %d\n", updateCount, updateArg.getId());
+                } else if (command.equals(listBusinesses)) {
+                    JUDDIUtil.printBusinessInfo(juddiClient.getBusinessList().getBusinessInfos());
+                } else if (command.equals(filterServices)) {
+                    @SuppressWarnings("unchecked")
+                    Box<String> filterArg = (Box<String>) withArg.getRight();
+                    List<BusinessService> services = juddiClient.getServices(filterArg.getValue());
+                    JUDDIUtil.printServiceInfo(services);
                 }
             } catch (ExterminatusServiceException exc) {
                 System.out.println("Error in service:");
