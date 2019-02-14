@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>lab-7</artifactId>
+        <groupId>ru.ifmo.wst</groupId>
+        <version>7.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>exterminatus-service</artifactId>
+
+    <properties>
+        <client.exterminatus.artifactName>${project.artifactId}-${project.version}-client</client.exterminatus.artifactName>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jaxws-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>gen-wdsl</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>wsgen</goal>
+                        </goals>
+                        <configuration>
+                            <genWsdl>true</genWsdl>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>build-client-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <args>
+                                <arg>-clientjar</arg>
+                                <arg>${project.build.directory}/${client.exterminatus.artifactName}.jar</arg>
+                            </args>
+                            <destDir>${project.build.directory}/jaxws-client-classes</destDir>
+                            <xnocompile>false</xnocompile>
+                            <wsdlFiles>
+                                <wsdlFile>${project.build.directory}/generated-sources/wsdl/ExterminatusServiceService.wsdl</wsdlFile>
+                            </wsdlFiles>
+                            <packageName>ru.ifmo.wst.lab1.ws.client</packageName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-client-jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/${client.exterminatus.artifactName}.jar</file>
+                                    <type>jar</type>
+                                    <classifier>client</classifier>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>ru.ifmo.wst</groupId>
+            <artifactId>data-access</artifactId>
+            <version>7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
+</project>
