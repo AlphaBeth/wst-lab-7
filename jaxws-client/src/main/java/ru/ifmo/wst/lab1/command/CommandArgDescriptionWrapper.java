@@ -3,8 +3,8 @@ package ru.ifmo.wst.lab1.command;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class CommandArgWrapper<T, C> implements CommandArg<T, C> {
-    protected final CommandArg<T, C> wrapped;
+public class CommandArgDescriptionWrapper<T> implements CommandArgDescription<T> {
+    protected final CommandArgDescription<T> wrapped;
 
     @Override
     public String getName() {
@@ -26,8 +26,4 @@ public class CommandArgWrapper<T, C> implements CommandArg<T, C> {
         return wrapped.convertFromString(arg);
     }
 
-    @Override
-    public void acceptConverted(T converted, C consumer) {
-        wrapped.acceptConverted(converted, consumer);
-    }
 }

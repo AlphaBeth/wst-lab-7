@@ -1,10 +1,10 @@
 package ru.ifmo.wst.lab1.command.args;
 
-import ru.ifmo.wst.lab1.command.CommandArg;
-import ru.ifmo.wst.lab1.command.CommandArgWrapper;
+import ru.ifmo.wst.lab1.command.CommandArgDescription;
+import ru.ifmo.wst.lab1.command.CommandArgDescriptionWrapper;
 
-public class EmptyStringToNull<T, C> extends CommandArgWrapper<T, C> {
-    public EmptyStringToNull(CommandArg<T, C> wrapped) {
+public class EmptyStringToNull<T> extends CommandArgDescriptionWrapper<T> {
+    public EmptyStringToNull(CommandArgDescription<T> wrapped) {
         super(wrapped);
     }
 

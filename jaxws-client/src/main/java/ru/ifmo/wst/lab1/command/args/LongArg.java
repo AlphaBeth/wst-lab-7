@@ -1,17 +1,15 @@
 package ru.ifmo.wst.lab1.command.args;
 
-import ru.ifmo.wst.lab1.command.AbstractCommandArg;
+import ru.ifmo.wst.lab1.command.AbstractCommandArgDescription;
 import ru.ifmo.wst.lab1.command.ConvertException;
 
-import java.util.function.BiConsumer;
-
-public class LongArg<C> extends AbstractCommandArg<Long, C> {
-    public LongArg(String errorMessage, String name, String description, BiConsumer<C, Long> consumer) {
-        super(errorMessage, name, description, consumer);
+public class LongArg extends AbstractCommandArgDescription<Long> {
+    public LongArg(String errorMessage, String name, String description) {
+        super(errorMessage, name, description);
     }
 
-    public LongArg(String name, String description, BiConsumer<C, Long> consumer) {
-        super("Not an integer number", name, description, consumer);
+    public LongArg(String name, String description) {
+        super("Not an integer number", name, description);
     }
 
     @Override

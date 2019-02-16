@@ -1,13 +1,17 @@
 package ru.ifmo.wst.lab1.command;
 
-public interface CommandArg<T, C> {
-    String getName();
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-    String getDescription();
+import java.util.function.BiConsumer;
 
-    String getErrorMessage();
+@RequiredArgsConstructor
+public class CommandArg<C, T> {
+    @Getter
+    private final CommandArgDescription<T> argDescription;
+    private final BiConsumer<C, T> commandArgBuilder;
 
-    T convertFromString(String arg);
-
-    void acceptConverted(T converted, C consumer);
+    public void acceptArgValue(C builtArg, T arg) {
+        commandArgBuilder.accept(builtArg, arg);
+    }
 }

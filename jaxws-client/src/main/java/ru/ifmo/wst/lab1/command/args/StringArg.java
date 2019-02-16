@@ -1,16 +1,14 @@
 package ru.ifmo.wst.lab1.command.args;
 
-import ru.ifmo.wst.lab1.command.AbstractCommandArg;
+import ru.ifmo.wst.lab1.command.AbstractCommandArgDescription;
 
-import java.util.function.BiConsumer;
-
-public class StringArg<C> extends AbstractCommandArg<String, C> {
-    public StringArg(String errorMessage, String name, String description, BiConsumer<C, String> consumer) {
-        super(errorMessage, name, description, consumer);
+public class StringArg extends AbstractCommandArgDescription<String> {
+    public StringArg(String errorMessage, String name, String description) {
+        super(errorMessage, name, description);
     }
 
-    public StringArg(String name, String description, BiConsumer<C, String> consumer) {
-        this("Not a string", name, description, consumer);
+    public StringArg(String name, String description) {
+        this("Not a string", name, description);
     }
 
     @Override

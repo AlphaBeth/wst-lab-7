@@ -1,13 +1,10 @@
 package ru.ifmo.wst.lab1.command;
 
-import lombok.RequiredArgsConstructor;
-import ru.ifmo.wst.lab1.Pair;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@RequiredArgsConstructor
 public class CommandInterpreter {
     private static final String COMMAND_SEPARATOR = "==============";
     private final Supplier<String> lineProducer;
@@ -17,6 +14,16 @@ public class CommandInterpreter {
     private final String commandPrompt;
     private final String argPrompt;
 
+    public CommandInterpreter(Supplier<String> lineProducer, Consumer<String> messageConsumer,
+                              List<Command<?>> commands, String noCommandMessage, String commandPrompt, String argPrompt) {
+        this.lineProducer = lineProducer;
+        this.messageConsumer = messageConsumer;
+        this.commands = new ArrayList<>(commands);
+        this.noCommandMessage = noCommandMessage;
+        this.commandPrompt = commandPrompt;
+        this.argPrompt = argPrompt;
+    }
+
     public void info() {
         newLineMessage("List of commands: ");
         newLineMessage("");
@@ -24,40 +31,46 @@ public class CommandInterpreter {
             newLineMessage(command.getName() + " - " + command.getDescription());
             newLineMessage("Command arguments:");
             command.getArgs().forEach(arg -> {
-                newLineMessage(arg.getName() + " - " + arg.getDescription());
+                CommandArgDescription<?> argDescription = arg.getArgDescription();
+                newLineMessage(argDescription.getName() + " - " + argDescription.getDescription());
             });
             newLineMessage(COMMAND_SEPARATOR);
         });
     }
 
-    public Pair<Command, Object> readCommand() {
+    public void readCommand() throws Exception {
         prompt(commandPrompt);
         String line = nextLine();
-        Command<?> matchedCommand = null;
-        for (Command command : commands) {
+        Command matchedCommand = null;
+        for (Command<?> command : commands) {
             if (line.trim().equals(command.getName())) {
                 matchedCommand = command;
             }
         }
         if (matchedCommand == null) {
             newLineMessage(noCommandMessage);
-            return null;
+            return;
         }
         Object o = matchedCommand.newValue();
-        for (CommandArg arg : matchedCommand.getArgs()) {
+        for (CommandArg arg : (List<CommandArg>) matchedCommand.getArgs()) {
+            CommandArgDescription argDescription = arg.getArgDescription();
             while (true) {
-                prompt(arg.getDescription());
+                prompt(argDescription.getDescription());
                 String currLine = nextLine();
                 try {
-                    Object converted = arg.convertFromString(currLine);
-                    arg.acceptConverted(converted, o);
+                    Object converted = argDescription.convertFromString(currLine);
+                    arg.acceptArgValue(o, converted);
                     break;
                 } catch (ConvertException exc) {
-                    newLineMessage(arg.getErrorMessage());
+                    newLineMessage(argDescription.getErrorMessage());
                 }
             }
         }
-        return new Pair<>(matchedCommand, o);
+        matchedCommand.execute(o);
+    }
+
+    public void addCommand(Command<?> command) {
+        this.commands.add(command);
     }
 
     private void message(String message) {
