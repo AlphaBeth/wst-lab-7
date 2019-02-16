@@ -38,6 +38,7 @@ import javax.wsdl.extensions.soap.SOAPAddress;
 import javax.xml.namespace.QName;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,7 +80,7 @@ public class JUDDIClient {
      * with this code)
      */
 
-    public ServiceDetail publishUrl(String businessKey, String serviceName, String wsdlUrl) throws Exception {
+    public List<ServiceDetail> publishUrl(String businessKey, String serviceName, String wsdlUrl) throws Exception {
 
         // Creating a service to save.  Only adding the minimum data: the parent business key retrieved from saving the business
         // above and a single name.
@@ -87,6 +88,7 @@ public class JUDDIClient {
         Definition definition = readWSDL.readWSDL(new URL(wsdlUrl));
         @SuppressWarnings("unchecked")
         Map<QName, Service> services = (Map<QName, Service>) definition.getServices();
+        List<ServiceDetail> result = new ArrayList<>();
         for (Map.Entry<QName, Service> qNameServiceEntry : services.entrySet()) {
             QName k = qNameServiceEntry.getKey();
             Service v = qNameServiceEntry.getValue();
@@ -136,9 +138,9 @@ public class JUDDIClient {
             SaveService ss = new SaveService();
             ss.getBusinessService().add(myService);
             ss.setAuthInfo(authToken.getAuthInfo());
-            ServiceDetail sd = publish.saveService(ss);
+            result.add(publish.saveService(ss));
         }
-        return null;
+        return result;
 
     }
 

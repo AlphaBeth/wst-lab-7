@@ -3,6 +3,7 @@ package ru.ifmo.wst.lab1.client;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.uddi.api_v3.BusinessService;
+import org.uddi.api_v3.ServiceDetail;
 import ru.ifmo.wst.lab1.Box;
 import ru.ifmo.wst.lab1.JUDDIClient;
 import ru.ifmo.wst.lab1.JUDDIUtil;
@@ -32,6 +33,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 
@@ -136,7 +138,13 @@ public class ConsoleClientImpl {
 
     @SneakyThrows
     private void createService(ServiceCreate createArg) {
-        juddiClient.publishUrl(createArg.getBusinessKey().trim(), createArg.getServiceName().trim(), createArg.getWsdlUrl().trim());
+        List<ServiceDetail> serviceDetails = juddiClient.publishUrl(createArg.getBusinessKey().trim(), createArg.getServiceName().trim(), createArg.getWsdlUrl().trim());
+        System.out.printf("Services published from wsdl %s\n", createArg.getWsdlUrl());
+        JUDDIUtil.printServicesInfo(serviceDetails.stream()
+                .map(ServiceDetail::getBusinessService)
+                .flatMap(List::stream)
+                .collect(Collectors.toList())
+        );
     }
 
     @SneakyThrows
