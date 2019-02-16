@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import org.apache.juddi.api_v3.AccessPointType;
 import org.apache.juddi.v3.client.UDDIConstants;
 import org.apache.juddi.v3.client.config.UDDIClient;
+import org.apache.juddi.v3.client.mapping.wsdl.ReadWSDL;
 import org.apache.juddi.v3.client.transport.Transport;
 import org.uddi.api_v3.AccessPoint;
 import org.uddi.api_v3.AuthToken;
@@ -24,12 +25,21 @@ import org.uddi.api_v3.SaveBusiness;
 import org.uddi.api_v3.SaveService;
 import org.uddi.api_v3.ServiceDetail;
 import org.uddi.api_v3.ServiceInfo;
+import org.uddi.api_v3.ServiceInfos;
 import org.uddi.v3_service.UDDIInquiryPortType;
 import org.uddi.v3_service.UDDIPublicationPortType;
 import org.uddi.v3_service.UDDISecurityPortType;
 
+import javax.wsdl.Definition;
+import javax.wsdl.Port;
+import javax.wsdl.Service;
+import javax.wsdl.extensions.ExtensibilityElement;
+import javax.wsdl.extensions.soap.SOAPAddress;
+import javax.xml.namespace.QName;
+import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
@@ -68,35 +78,67 @@ public class JUDDIClient {
      * mechanism that should be portable (meaning use any UDDI v3 library
      * with this code)
      */
-    public ServiceDetail publishUrl(String businessKey, String serviceName, String wsdlUrl) throws RemoteException {
+
+    public ServiceDetail publishUrl(String businessKey, String serviceName, String wsdlUrl) throws Exception {
 
         // Creating a service to save.  Only adding the minimum data: the parent business key retrieved from saving the business
         // above and a single name.
-        BusinessService myService = new BusinessService();
-        myService.setBusinessKey(businessKey);
-        Name myServName = new Name();
-        myServName.setValue(serviceName);
-        myService.getName().add(myServName);
+        ReadWSDL readWSDL = new ReadWSDL();
+        Definition definition = readWSDL.readWSDL(new URL(wsdlUrl));
+        @SuppressWarnings("unchecked")
+        Map<QName, Service> services = (Map<QName, Service>) definition.getServices();
+        for (Map.Entry<QName, Service> qNameServiceEntry : services.entrySet()) {
+            QName k = qNameServiceEntry.getKey();
+            Service v = qNameServiceEntry.getValue();
+            BusinessService myService = new BusinessService();
+            myService.setBusinessKey(businessKey);
+            Name myServName = new Name();
+            myServName.setValue(serviceName);
+            Name localName = new Name();
+            localName.setValue(k.getLocalPart());
 
-        // Add binding templates, etc...
-        BindingTemplate myBindingTemplate = new BindingTemplate();
-        AccessPoint accessPoint = new AccessPoint();
-        accessPoint.setUseType(AccessPointType.WSDL_DEPLOYMENT.toString());
-        accessPoint.setValue(wsdlUrl);
-        myBindingTemplate.setAccessPoint(accessPoint);
-        BindingTemplates myBindingTemplates = new BindingTemplates();
-        //optional but recommended step, this annotations our binding with all the standard SOAP tModel instance infos
-        myBindingTemplate = UDDIClient.addSOAPtModels(myBindingTemplate);
-        myBindingTemplates.getBindingTemplate().add(myBindingTemplate);
+            myService.getName().add(myServName);
+            myService.getName().add(localName);
 
-        myService.setBindingTemplates(myBindingTemplates);
+            // Add binding templates, etc...
+            BindingTemplate myBindingTemplate = new BindingTemplate();
+            AccessPoint accessPoint = new AccessPoint();
+            accessPoint.setUseType(AccessPointType.WSDL_DEPLOYMENT.toString());
+            accessPoint.setValue(wsdlUrl);
+            myBindingTemplate.setAccessPoint(accessPoint);
+            BindingTemplates myBindingTemplates = new BindingTemplates();
+            //optional but recommended step, this annotations our binding with all the standard SOAP tModel instance infos
+            myBindingTemplate = UDDIClient.addSOAPtModels(myBindingTemplate);
+            myBindingTemplates.getBindingTemplate().add(myBindingTemplate);
+            @SuppressWarnings("unchecked")
+            Map<String, Port> ports = (Map<String, Port>) v.getPorts();
+            ports.forEach((pk, pv) -> {
+                ((List<ExtensibilityElement>) pv.getExtensibilityElements()).stream()
+                        .filter(el -> el instanceof SOAPAddress)
+                        .map(el -> (SOAPAddress) el)
+                        .map(ad -> {
+                            AccessPoint ap = new AccessPoint();
+                            ap.setUseType(AccessPointType.END_POINT.toString());
+                            ap.setValue(ad.getLocationURI());
+                            return ap;
+                        })
+                        .map(ap -> {
+                            BindingTemplate bt = new BindingTemplate();
+                            bt.setAccessPoint(ap);
+                            return UDDIClient.addSOAPtModels(bt);
+                        })
+                        .forEach(bt -> myBindingTemplates.getBindingTemplate().add(bt));
+            });
 
-        // Adding the service to the "save" structure, using our publisher's authentication info and saving away.
-        SaveService ss = new SaveService();
-        ss.getBusinessService().add(myService);
-        ss.setAuthInfo(authToken.getAuthInfo());
-        ServiceDetail sd = publish.saveService(ss);
-        return sd;
+            myService.setBindingTemplates(myBindingTemplates);
+
+            // Adding the service to the "save" structure, using our publisher's authentication info and saving away.
+            SaveService ss = new SaveService();
+            ss.getBusinessService().add(myService);
+            ss.setAuthInfo(authToken.getAuthInfo());
+            ServiceDetail sd = publish.saveService(ss);
+        }
+        return null;
 
     }
 
@@ -141,8 +183,11 @@ public class JUDDIClient {
         BusinessInfos businessInfos = businessList.getBusinessInfos();
         GetServiceDetail gsd = new GetServiceDetail();
         for (BusinessInfo businessInfo : businessInfos.getBusinessInfo()) {
-            for (ServiceInfo serviceInfo : businessInfo.getServiceInfos().getServiceInfo()) {
-                gsd.getServiceKey().add(serviceInfo.getServiceKey());
+            ServiceInfos serviceInfos = businessInfo.getServiceInfos();
+            if (serviceInfos != null) {
+                for (ServiceInfo serviceInfo : serviceInfos.getServiceInfo()) {
+                    gsd.getServiceKey().add(serviceInfo.getServiceKey());
+                }
             }
         }
         gsd.setAuthInfo(authToken.getAuthInfo());

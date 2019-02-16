@@ -134,8 +134,9 @@ public class ConsoleClientImpl {
 
     }
 
+    @SneakyThrows
     private void createService(ServiceCreate createArg) {
-
+        juddiClient.publishUrl(createArg.getBusinessKey().trim(), createArg.getServiceName().trim(), createArg.getWsdlUrl().trim());
     }
 
     @SneakyThrows
