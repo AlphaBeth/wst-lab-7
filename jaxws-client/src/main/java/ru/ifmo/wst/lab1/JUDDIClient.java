@@ -210,6 +210,13 @@ public class JUDDIClient {
                 .collect(Collectors.toList());
     }
 
+    public ServiceDetail getService(String key) throws RemoteException {
+        GetServiceDetail gsd = new GetServiceDetail();
+        gsd.setAuthInfo(authToken.getAuthInfo());
+        gsd.getServiceKey().add(key);
+        return inquiry.getServiceDetail(gsd);
+    }
+
     public void authenticate(String userId, String userCred) throws RemoteException {
         this.authToken = getAuthToken(userId, userCred);
     }

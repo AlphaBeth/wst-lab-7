@@ -2,6 +2,10 @@ package ru.ifmo.wst.lab1.client;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.juddi.api_v3.AccessPointType;
+import org.uddi.api_v3.AccessPoint;
+import org.uddi.api_v3.BindingTemplate;
+import org.uddi.api_v3.BindingTemplates;
 import org.uddi.api_v3.BusinessService;
 import org.uddi.api_v3.ServiceDetail;
 import ru.ifmo.wst.lab1.Box;
@@ -125,15 +129,51 @@ public class ConsoleClientImpl {
                         new CommandArg<>(new StringArg("service name", "Name of new service"), ServiceCreate::setServiceName),
                         new CommandArg<>(new StringArg("service wsdl", "WSDL URL of service"), ServiceCreate::setWsdlUrl)
                 ), ServiceCreate::new, this::createService);
+        Command<Box<String>> useServiceCommand = new Command<>("useService", "Get endpoint for exterminatus service from JUDDI service by its key",
+                asList(
+                        new CommandArg<>(new StringArg("service key", "Key for lookup service in JUDDI"), Box::setValue)
+                ), Box::new, this::useService
+        );
 
         Command<Void> exitCommand = new Command<>("exit", "Exit application", (arg) -> this.exit = true);
         this.commandInterpreter = new CommandInterpreter(() -> readLine(bufferedReader),
                 System.out::print, asList(infoCommand, listBusinesses, filterServices, createServiceCommand,
-                changeEndpointAddressCommand, findAllCommand, filterCommand,
+                useServiceCommand, changeEndpointAddressCommand, findAllCommand, filterCommand,
                 createCommand, updateCommand, deleteCommand, exitCommand),
                 "No command found",
                 "Enter command", "> ");
 
+    }
+
+    public void useService(Box<String> serviceKey) {
+        useService(serviceKey.getValue());
+    }
+
+    @SneakyThrows
+    private void useService(String serviceKey) {
+
+        ServiceDetail serviceDetail = juddiClient.getService(serviceKey.trim());
+        if (serviceDetail == null || serviceDetail.getBusinessService() == null || serviceDetail.getBusinessService().isEmpty()) {
+            System.out.printf("Can not find service by key '%s'\b", serviceKey);
+            return;
+        }
+        List<BusinessService> services = serviceDetail.getBusinessService();
+        BusinessService businessService = services.get(0);
+        BindingTemplates bindingTemplates = businessService.getBindingTemplates();
+        if (bindingTemplates == null || bindingTemplates.getBindingTemplate().isEmpty()) {
+            System.out.printf("No binding template found for service '%s' '%s'\n", serviceKey, businessService.getBusinessKey());
+            return;
+        }
+        for (BindingTemplate bindingTemplate : bindingTemplates.getBindingTemplate()) {
+            AccessPoint accessPoint = bindingTemplate.getAccessPoint();
+            if (accessPoint.getUseType().equals(AccessPointType.END_POINT.toString())) {
+                String value = accessPoint.getValue();
+                System.out.printf("Use endpoint '%s'\n", value);
+                changeEndpointUrl(value);
+                return;
+            }
+        }
+        System.out.printf("No endpoint found for service '%s'\n", serviceKey);
     }
 
     @SneakyThrows
