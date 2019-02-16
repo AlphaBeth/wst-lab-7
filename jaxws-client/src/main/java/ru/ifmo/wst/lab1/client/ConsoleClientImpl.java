@@ -119,7 +119,7 @@ public class ConsoleClientImpl {
                         new CommandArg<>(new StringArg("filter query", "String to filter services"), Box::setValue)
                 ), Box::new, this::filterServices);
 
-        Command<ServiceCreate> createServiceCommand = new Command<>("createService", "Publish new service by wsdl url",
+        Command<ServiceCreate> createServiceCommand = new Command<>("publishService", "Publish new service by wsdl url",
                 asList(
                         new CommandArg<>(new StringArg("business key", "Business key in JUDDI register (use listBusinesses)"), ServiceCreate::setBusinessKey),
                         new CommandArg<>(new StringArg("service name", "Name of new service"), ServiceCreate::setServiceName),
