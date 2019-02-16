@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class CommandInterpreter {
     private static final String COMMAND_SEPARATOR = "==============";
@@ -35,6 +36,23 @@ public class CommandInterpreter {
                 newLineMessage(argDescription.getName() + " - " + argDescription.getDescription());
             });
             newLineMessage(COMMAND_SEPARATOR);
+        });
+    }
+
+    public void shortInfo() {
+        newLineMessage("List of commands: ");
+        commands.forEach(command -> {
+            message(command.getName());
+            if (!command.getArgs().isEmpty()) {
+                message(" - ");
+                message(command.getArgs().stream()
+                        .map(CommandArg::getArgDescription)
+                        .map(CommandArgDescription::getName)
+                        .map(n -> "'" + n + "'")
+                        .collect(Collectors.joining(", "))
+                );
+            }
+            newLineMessage("");
         });
     }
 

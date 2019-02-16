@@ -76,7 +76,8 @@ public class ConsoleClientImpl {
         this.service = service;
         this.juddiClient = juddiClient;
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-        Command<Void> infoCommand = new Command<>("info", "Print help for commands", (arg) -> this.info());
+        Command<Void> infoCommand = new Command<>("help", "Print help for commands", (arg) -> this.info());
+        Command<Void> shortInfoCommand = new Command<>("commands", "Print list of commands", (arg) -> this.shortInfo());
         Command<Box<String>> changeEndpointAddressCommand = new Command<>("endpoint", "Changes endpoint address",
                 Arrays.asList(
                         new CommandArg<>(new StringArg("url", "New exterminatus endpoint url"), Box::setValue)
@@ -145,7 +146,7 @@ public class ConsoleClientImpl {
 
         Command<Void> exitCommand = new Command<>("exit", "Exit application", (arg) -> this.exit = true);
         this.commandInterpreter = new CommandInterpreter(() -> readLine(bufferedReader),
-                System.out::print, asList(infoCommand, listBusinesses, filterServices, createBusinessCommand, createServiceCommand,
+                System.out::print, asList(shortInfoCommand, infoCommand, listBusinesses, filterServices, createBusinessCommand, createServiceCommand,
                 useServiceCommand, changeEndpointAddressCommand, findAllCommand, filterCommand,
                 createCommand, updateCommand, deleteCommand, exitCommand),
                 "No command found",
@@ -289,6 +290,10 @@ public class ConsoleClientImpl {
 
     public void info() {
         commandInterpreter.info();
+    }
+
+    public void shortInfo() {
+        commandInterpreter.shortInfo();
     }
 
 

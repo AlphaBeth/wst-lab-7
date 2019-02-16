@@ -22,7 +22,7 @@ public class ConsoleClient {
         juddiClient.authenticate(username, password);
 
         ConsoleClientImpl consoleClient = new ConsoleClientImpl(service, juddiClient);
-        consoleClient.info();
+        consoleClient.shortInfo();
         consoleClient.start();
 
     }
