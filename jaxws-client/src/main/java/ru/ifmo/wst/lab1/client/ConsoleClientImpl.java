@@ -6,7 +6,10 @@ import org.apache.juddi.api_v3.AccessPointType;
 import org.uddi.api_v3.AccessPoint;
 import org.uddi.api_v3.BindingTemplate;
 import org.uddi.api_v3.BindingTemplates;
+import org.uddi.api_v3.BusinessDetail;
+import org.uddi.api_v3.BusinessEntity;
 import org.uddi.api_v3.BusinessService;
+import org.uddi.api_v3.Name;
 import org.uddi.api_v3.ServiceDetail;
 import ru.ifmo.wst.lab1.Box;
 import ru.ifmo.wst.lab1.JUDDIClient;
@@ -134,10 +137,15 @@ public class ConsoleClientImpl {
                         new CommandArg<>(new StringArg("service key", "Key for lookup service in JUDDI"), Box::setValue)
                 ), Box::new, this::useService
         );
+        Command<Box<String>> createBusinessCommand = new Command<>("createBusiness", "Create new business",
+                asList(
+                        new CommandArg<>(new StringArg("business name", "business name"), Box::setValue)
+                ), Box::new, this::createBusiness
+        );
 
         Command<Void> exitCommand = new Command<>("exit", "Exit application", (arg) -> this.exit = true);
         this.commandInterpreter = new CommandInterpreter(() -> readLine(bufferedReader),
-                System.out::print, asList(infoCommand, listBusinesses, filterServices, createServiceCommand,
+                System.out::print, asList(infoCommand, listBusinesses, filterServices, createBusinessCommand, createServiceCommand,
                 useServiceCommand, changeEndpointAddressCommand, findAllCommand, filterCommand,
                 createCommand, updateCommand, deleteCommand, exitCommand),
                 "No command found",
@@ -185,6 +193,21 @@ public class ConsoleClientImpl {
                 .flatMap(List::stream)
                 .collect(Collectors.toList())
         );
+    }
+
+    @SneakyThrows
+    public void createBusiness(String businessName) {
+        businessName = businessName.trim();
+        BusinessDetail business = juddiClient.createBusiness(businessName);
+        System.out.println("New business was created");
+        for (BusinessEntity businessEntity : business.getBusinessEntity()) {
+            System.out.printf("Key: '%s'\n", businessEntity.getBusinessKey());
+            System.out.printf("Name: '%s'\n", businessEntity.getName().stream().map(Name::getValue).collect(Collectors.joining(" ")));
+        }
+    }
+
+    private void createBusiness(Box<String> businessName) {
+        createBusiness(businessName.getValue());
     }
 
     @SneakyThrows

@@ -18,22 +18,27 @@ public class JUDDIUtil {
             System.out.println("No data returned");
         } else {
             for (BusinessInfo businessInfo : businessInfos.getBusinessInfo()) {
-                System.out.println("===============================================");
-                System.out.println("Business Key: " + businessInfo.getBusinessKey());
-                System.out.println("Name: " + businessInfo.getName().stream()
-                        .map(Name::getValue)
-                        .collect(Collectors.joining(" "))
-                );
-
-                System.out.println("Description: " + businessInfo
-                        .getDescription()
-                        .stream()
-                        .map(Description::getValue)
-                        .collect(Collectors.joining(" "))
-                );
+                printBusinessDetail(businessInfo);
             }
         }
     }
+
+    public static void printBusinessDetail(BusinessInfo businessInfo) {
+        System.out.println("===============================================");
+        System.out.println("Business Key: " + businessInfo.getBusinessKey());
+        System.out.println("Name: " + businessInfo.getName().stream()
+                .map(Name::getValue)
+                .collect(Collectors.joining(" "))
+        );
+
+        System.out.println("Description: " + businessInfo
+                .getDescription()
+                .stream()
+                .map(Description::getValue)
+                .collect(Collectors.joining(" "))
+        );
+    }
+
 
     public static void printServicesInfo(List<BusinessService> businessServices) {
         for (BusinessService businessService : businessServices) {

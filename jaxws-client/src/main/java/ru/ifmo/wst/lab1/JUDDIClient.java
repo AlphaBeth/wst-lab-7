@@ -144,11 +144,11 @@ public class JUDDIClient {
 
     }
 
-    private BusinessDetail createBusiness() throws RemoteException {
+    public BusinessDetail createBusiness(String businessName) throws RemoteException {
         // Creating the parent business entity that will contain our service.
         BusinessEntity myBusEntity = new BusinessEntity();
         Name myBusName = new Name();
-        myBusName.setValue("My Business");
+        myBusName.setValue(businessName);
         myBusEntity.getName().add(myBusName);
 
         // Adding the business entity to the "save" structure, using our publisher's authentication info and saving away.
